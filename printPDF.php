@@ -31,7 +31,8 @@ $headers = '<style type="text/css">
                 @page { margin: 80px 50px; }
                 #header { position: fixed; left: 0px; top: -80px; right: 0px; height: 80px; padding-top: 20px; text-align: center; }
                 #header h1 { font-size: 13px; color: #778899; }
-                #footer { position: fixed; left: 0px; bottom: -80px; right: 0px; height: 80px; background-color: lightblue; }
+                #footer { position: fixed; left: 0px; bottom: -80px; border-top: 1px solid #ccc; right: 0px; height: 80px; }
+                #footer .page{ padding: 10px; }
                 #footer .page:after { content: counter(page, upper-roman); }
             </style>
             <div id="header">
@@ -39,6 +40,9 @@ $headers = '<style type="text/css">
                     <img src="img/logo.png" style="display:inline-block;width: 40px; padding-top: 10px; " />
                     <h1 style="display:inline-block;">Colin Klinkert <span style="font-size: 0.8em; display: block;">http://www.colinklinkert.com</span></h1>
                 </div>
+            </div>
+            <div id="footer">
+                <p class="page"><a href="ibmphp.blogspot.com"></a></p>
             </div>';
 
 if($company)
