@@ -34,6 +34,8 @@ $headers = '<style type="text/css">
                 #footer { position: fixed; left: 0px; bottom: -80px; border-top: 1px solid #ccc; right: 0px; height: 80px; }
                 #footer .page{ padding: 10px; }
                 #footer .page:after { content: counter(page, upper-roman); }
+                h3 { color: #7A7A7A; margin-bottom:0; }
+                td.company { color: #A8A8A8; text-align:right; }
             </style>
             <div id="header">
                 <div style="margin-left:50px;width: 150px;">
@@ -53,12 +55,12 @@ if($company)
                         <td width="30%">
                             <img src="'. $company['logo'] .'" style="width:130px;">
                         </td>
-                        <td width="70%" style="text-align:right">
+                        <td width="70%" class="company">
                             <h3>'.$company['name'].'</h3>
-                            <p>'.$company['address'].'<br/>'.
-                            $company['email'].'<br/>'.
-                            $company['phone'].'<br/>'.
-                            $company['website'].'</p>
+                            <p>'.$company['address'].'<br/>
+                            Email: '.$company['email'].'<br/>
+                            Phone: '.$company['phone'].'<br/>
+                            Website: '.$company['website'].'</p>
                         </td>
                     </tr>
                 </table>
