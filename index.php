@@ -1,10 +1,10 @@
 <?php
 
 // check if the file of the data exists
-if(file_exists('data.json')) 
+if(file_exists('data/data.json')) 
 {
     // obtain the info of the company
-    $company = json_decode(file_get_contents('data.json'),true);
+    $company = json_decode(file_get_contents('data/data.json'),true);
 } else {
     $company =  null;
 }
@@ -46,6 +46,7 @@ if(file_exists('data.json'))
             <div id="navbar" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
                     <li class="active"><a href="#">PDF</a></li>
+                    <li><a href="ajaxtest.php">AJAX Test</a></li>
                 </ul>
             </div>
         </div>

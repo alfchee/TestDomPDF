@@ -9,14 +9,14 @@ define('DOMPDF_ENABLE_AUTOLOAD',false);
 // including DOMPDF's default configuration
 require_once 'vendor/dompdf/dompdf/dompdf_config.inc.php';
 
-include('./data.php'); // include the data saved from the company
+include('./data/data.php'); // include the data saved from the company
 
 
 // check if the file of the data exists
-if(file_exists('data.json')) 
+if(file_exists('data/data.json')) 
 {
     // obtain the info of the company
-    $company = json_decode(file_get_contents('data.json'),true);
+    $company = json_decode(file_get_contents('data/data.json'),true);
 } else {
     $company =  null;
 }
