@@ -47,6 +47,7 @@ if(file_exists('data/data.json'))
                 <ul class="nav navbar-nav">
                     <li class="active"><a href="#">PDF</a></li>
                     <li><a href="ajaxtest.php">AJAX Test</a></li>
+                    <li><a href="crawler/crawler.html">Crawler</a></li>
                 </ul>
             </div>
         </div>
