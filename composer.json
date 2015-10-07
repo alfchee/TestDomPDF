@@ -4,5 +4,8 @@
         "guzzlehttp/guzzle": "~6.0",
         "symfony/dom-crawler": "^2.7",
         "symfony/css-selector": "^2.7"
+    },
+    "autoload": {
+    	"files" : ["vendor/php-multi-curl/EpiCurl.php"]
     }
 }

@@ -5,7 +5,7 @@ require_once 'crawler.php';
 
 $startURL = $_POST['url'];
 
-$crawler = new Crawler($startURL,2);
+$crawler = new Crawler($startURL,3);
 $urls = $crawler->run();
 
 $encoded = json_encode(array_keys($urls));

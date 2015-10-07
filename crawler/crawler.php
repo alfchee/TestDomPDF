@@ -1,6 +1,5 @@
 <?php
 
-use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 use Symfony\Component\CssSelector\CssSelector;
 
@@ -10,26 +9,23 @@ class Crawler
     protected $_depth;
     protected $_seen = array();
     protected $_host;
-    protected $_client;
     protected $_sitemap;
+    protected $_curl;
+    protected $_limitUrls;
 
-    public function __construct($url, $depth = 3)
+    public function __construct($url, $depth = 3, $limitUrls = 100)
     {
         $this->_url = $url;
         $this->_depth = $depth;
         $parsed = parse_url($url);
         $this->_host = $parsed['host'];
+        $this->_curl = EpiCurl::getInstance();
+        $this->_limitUrls = $limitUrls;
     }//__construct()
 
     public function run()
     {
-        // check and set base uri
-        if($this->isValid($this->_url,1)) {
-            if(!$this->_client) {
-                $this->_client = new Client(array('base_uri' => $this->_url));
-            }
-        }
-
+        // first check for sitemap, if there's no one crawl the site
         if($this->hasSitemap()) {
             $this->getContentFromSitemap();
         } else {
@@ -41,6 +37,10 @@ class Crawler
 
     public function crawlPage($url, $depth)
     {
+        // limit the URL's to 100
+        if(count($this->_seen) >= $this->_limitUrls)
+            return;
+
         if(!$this->isValid($url,$depth)) {
            return;
         }
@@ -48,14 +48,44 @@ class Crawler
         // add to the seen URL
         $this->_seen[$url] = true;
         // get content an return code
-        list($content, $httpCode) = $this->getContent($url);
+        //list($content, $httpCode) = $this->getContent($url);
+
+        $req = $this->executeCurl($url);
+
+        if($req->code == 200)
+            $this->processLinks($req->data,$url,$depth);
 
         // $this->_printResult($url, $depth, $httpCode);
         // process links
         
-        if($httpCode == 200)
-            $this->processLinks($content, $url, $depth);
+        // if($httpCode == 200)
+        //     $this->processLinks($content, $url, $depth);
     }//crawlPage()
+
+    protected function checkHeaders($url)
+    {
+        $furl = false;
+
+        // check the response headers
+        $headers = get_headers($url);
+
+        // test for 301 or 302
+        if(preg_match('/^HTTP\/\d.\d\s+(301|302|304)/',$headers[0])) {
+            foreach($headers as $header) {
+                if(substr(strtolower($header), 0, 9) == 'location:') {
+                    $furl = trim(substr($header, 9, strlen($header)));
+                }
+            }
+        }
+        return ($furl) ? $furl : $url;
+    }//checkHeaders()
+
+    protected function executeCurl($url)
+    {
+        $newUrl = $this->checkHeaders($url);
+
+        return $this->_curl->addURL($newUrl);
+    }//executeCurl()
 
     protected function isValid($url, $depth)
     {
@@ -72,29 +102,31 @@ class Crawler
     }//isValid()
 
     protected function hasSitemap() {
-        $response = $this->_client->request('GET', '/robots.txt', ['http_errors' => false]);
+        // check the robot
+        $robot = $this->executeCurl($this->_url . '/robots.txt');
 
-        if($response->getStatusCode() === 200) {
+        if($robot->code === 200) {
             // search for the sitemap.xml
             $pattern = '/(http|https):.*/i';
-            preg_match($pattern,(string)$response->getBody(),$matches);
+            preg_match($pattern,(string)$robot->data,$matches);
 
             if(!$matches)
                 return false;
 
             // retrieve the sitemap
-            $mapResponse = $this->_client->request('GET',$matches[0],['http_errors' => false]);
-            if($mapResponse->getStatusCode() !== 200)
+            $mapResponse = $this->executeCurl($matches[0]);
+
+            if(!$mapResponse->data)
                 return false;
 
             // check for errors
             libxml_use_internal_errors(true);
-            $doc = simplexml_load_string((string)$mapResponse->getBody());
+            $doc = simplexml_load_string((string)$mapResponse->data);
 
             if(!$doc) 
                 return false;
             else{
-                $this->_sitemap = (string)$mapResponse->getBody();
+                $this->_sitemap = (string)$mapResponse->data;
                 return true;
             }
         }
@@ -104,7 +136,6 @@ class Crawler
 
     protected function getContentFromSitemap()
     {
-        CssSelector::disableHtmlExtension();
         $crawler = new \DOMDocument();
         $crawler->loadXml($this->_sitemap);
         // select all tags 'loc' that holds the URL
@@ -112,23 +143,11 @@ class Crawler
 
         foreach($locs as $element) {
             $this->_seen[$element->nodeValue] = true;
+
+            if(count($this->_seen) >= $this->_limitUrls)
+                return;
         }
     }//getConentFromSitemap()
-
-    protected function getContent($url)
-    {
-        try {
-            $response = $this->_client->request('GET', $url, ['http_errors' => false]);
-        } catch (RequestException $e) {
-            echo $e->getRequest();
-            var_dump($this->_seen);
-            if ($e->hasResponse()) {
-                echo $e->getResponse();
-            }
-        }
-
-        return array((string)$response->getBody(),$response->getStatusCode());
-    }//getContent()
 
     protected function _printResult($url, $depth, $httpcode)
     {
@@ -171,4 +190,3 @@ class Crawler
     }//processLinks()
     
 }//Crawler
-
