@@ -6,9 +6,15 @@ require_once 'CKMoz.php';
 require_once 'auth/auth.php';
 
 $startURL = $_POST['url'];
+$urls = [];
 
 $crawler = new Crawler($startURL,3);
 $urls = $crawler->run();
+
+var_dump($urls);die();
+$encoded = json_encode($urls);
+header('Content-type: application/json');
+exit($encoded);
 
 if(!is_array($urls))
     throw new Exception("There's no URL's to make the consult.");

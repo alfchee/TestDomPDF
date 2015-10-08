@@ -48,18 +48,51 @@ class Crawler
         // add to the seen URL
         $this->_seen[$url] = true;
         // get content an return code
-        //list($content, $httpCode) = $this->getContent($url);
+        // $req = $this->executeCurl($url);
 
-        $req = $this->executeCurl($url);
+        $request = new AsyncWebRequest($url);
+        if($request->start()) {
+            while($request->isRunning()) {
+                usleep(30);
+            }
+            if($request->join()) {
+                if($request->response) {
+                    $links = $this->processLinks($request->response,$url,$depth);
 
-        if($req->code == 200)
-            $this->processLinks($req->data,$url,$depth);
+                    foreach($links as $link) {
+                        if(count($this->_seen) >= $this->_limitUrls)
+                            continue;
+                        if(!$this->isValid($link,$depth)) {
+                           continue;
+                        }
+                        $this->_seen[$link] = true;
+                        $rq = new AsyncWebRequest($link);
+                        if($rq->start()) {
+                            while($rq->isRunning()) {
+                                usleep(30);
+                            }    
+                            if($rq->join()) {
+                                if($rq->response) {
+                                    $ls = $this->processLinks($rq->response,$link,$depth);
+                                    foreach($ls as $l) {
+                                        if(count($this->_seen) >= $this->_limitUrls)
+                                            continue;
+                                        if(!$this->isValid($l,$depth)) {
+                                           continue;
+                                        }
+                                        $this->_seen[$l] = true;
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+            }
+        }
 
-        // $this->_printResult($url, $depth, $httpCode);
-        // process links
-        
-        // if($httpCode == 200)
-        //     $this->processLinks($content, $url, $depth);
+        // if($req->code == 200)
+        //     $this->processLinks($req->data,$url,$depth);
     }//crawlPage()
 
     protected function checkHeaders($url)
@@ -184,6 +217,7 @@ class Crawler
     {
         $crawler = new DomCrawler($content);
         $anchors = $crawler->filter('a');
+        $links = [];
 
         foreach($anchors as $element) {
             $href = $element->getAttribute('href');
@@ -205,9 +239,51 @@ class Crawler
                     $href .= $path;
                 }
             }
-
-            $this->crawlPage($href,$depth - 1);
+            $links[] = $href;
+            //$this->crawlPage($href,$depth - 1);
         }
+        return $links;
     }//processLinks()
     
 }//Crawler
+
+
+class AsyncWebRequest extends Thread 
+{
+    public $response = null;
+    public $url = null;
+
+    public function __construct($url) 
+    {
+        $this->url = $url;
+    }//__construct()
+
+    public function run()
+    {
+        $curl = EpiCurl::getInstance();
+        
+        $newUrl = $this->checkHeaders($this->url);
+
+        $this->response = file_get_contents($this->url);//$curl->addURL($newUrl);
+
+        // var_dump($this->response);die();
+    }//run()
+
+    protected function checkHeaders($url)
+    {
+        $furl = false;
+
+        // check the response headers
+        $headers = get_headers($url);
+
+        // test for 301 or 302
+        if(preg_match('/^HTTP\/\d.\d\s+(301|302|304)/',$headers[0])) {
+            foreach($headers as $header) {
+                if(substr(strtolower($header), 0, 9) == 'location:') {
+                    $furl = trim(substr($header, 9, strlen($header)));
+                }
+            }
+        }
+        return ($furl) ? $furl : $url;
+    }//checkHeaders()
+}//WorkerThreads
