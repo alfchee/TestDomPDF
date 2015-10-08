@@ -11,11 +11,6 @@
 
 /*  Classes                     */
 /*------------------------------*/
-.search {
-    padding: 50px;
-    border: 1px solid #dedede;
-    border-radius: 5px;
-}
 .company-information {
     padding: 40px 15px;
     text-align: center;
@@ -24,8 +19,25 @@
   -webkit-animation: spin 1000ms infinite linear;
   animation: spin 1000ms infinite linear;
 }
+.info-title {
+    display: block;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+.info-url {
+    display: block;
+    color: #525252;
+}
 .note-edition {
     display:none;
+}
+.save-note {
+    margin-top: 10px;
+}
+.search {
+    padding: 50px;
+    border: 1px solid #dedede;
+    border-radius: 5px;
 }
 .table .add-note {
     vertical-align: middle;
@@ -39,9 +51,6 @@
 .table-bordered td.notes,
 .table-bordered th.notes {
     border-left: 3px solid #757474;
-}
-.save-note {
-    margin-top: 10px;
 }
 
 /*  Animations                  */

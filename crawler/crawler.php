@@ -32,7 +32,7 @@ class Crawler
             $this->crawlPage($this->_url, $this->_depth);
         }
 
-        return $this->_seen;
+        return array_keys($this->_seen);
     }//run()
 
     public function crawlPage($url, $depth)
@@ -87,6 +87,12 @@ class Crawler
         return $this->_curl->addURL($newUrl);
     }//executeCurl()
 
+    /**
+     * Checks a URL and check if is valid for the crawl
+     * @param  string   $url    URL to validate
+     * @param  integer  $depth  depth of the search
+     * @return boolean        true if is valid, false instead
+     */
     protected function isValid($url, $depth)
     {
         // if the URL doesn't belongs to the domain of the original URL given,
@@ -101,6 +107,10 @@ class Crawler
         return true;
     }//isValid()
 
+    /**
+     * Checks for the existence of a sitemap into a given site
+     * @return boolean 
+     */
     protected function hasSitemap() {
         // check the robot
         $robot = $this->executeCurl($this->_url . '/robots.txt');
@@ -134,6 +144,10 @@ class Crawler
         return false;
     }//hasSitemap()
 
+    /**
+     * get the contents of the obtained sitemap of a site
+     * and save them into $this->_seen
+     */
     protected function getContentFromSitemap()
     {
         $crawler = new \DOMDocument();
@@ -159,6 +173,13 @@ class Crawler
         flush();
     }
 
+    /**
+     * processLinks process the content of a page search for all the "a" tags
+     * and clean the link inside. Calls ::crawlPage for each link found
+     * @param  string   $content  the content of a page
+     * @param  string   $url      the URL who belongs the content
+     * @param  integer  $depth    the depth of levels to search links
+     */
     protected function processLinks($content, $url, $depth)
     {
         $crawler = new DomCrawler($content);
